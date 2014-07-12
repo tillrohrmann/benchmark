@@ -20,7 +20,10 @@ class GNMFSpark(val sparkConfig: SparkConf) extends SparkBenchmark with GNMFBenc
       val X = partialX.reduceByKey( _ + _ )
 
       //Y = W'*W*H
-      val partialWW = W map { case (idx, row) => (row * row.t): DenseMatrix[Double]}
+      val partialWW = W map { case (idx, row) =>
+        val r = row.length
+        DenseMatrix.ones[Double](r,r)
+      }
       val WW = partialWW.reduce(_ + _)
 
       val Y = H map { case (idx, column) => (idx, WW*column)}
@@ -47,8 +50,8 @@ class GNMFSpark(val sparkConfig: SparkConf) extends SparkBenchmark with GNMFBenc
       W = W join TU map { case (idx, (w, tu)) => (idx, (w :* tu): DenseVector[Double])}
     }
 
-    W map { case (idx, row) => row.activeSize} foreach println
-    H map { case (idx, col) => col.activeSize} foreach println
+    W map { case (idx, row) => (idx,row.activeSize)} foreach println
+    H map { case (idx, col) => (idx,col.activeSize)} foreach println
   }
 
   def getV(gnmf: GNMFConfiguration) = {

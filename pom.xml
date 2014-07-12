@@ -26,8 +26,8 @@
             </dependency>
             <dependency>
                 <groupId>org.scalanlp</groupId>
-                <artifactId>breeze_2.10</artifactId>
-                <version>0.8.1</version>
+                <artifactId>breeze-math_2.10</artifactId>
+                <version>0.4</version>
             </dependency>
             <dependency>
                 <groupId>eu.stratosphere</groupId>

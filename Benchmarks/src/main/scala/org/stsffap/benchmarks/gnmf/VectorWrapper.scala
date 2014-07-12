@@ -30,6 +30,11 @@ class VectorWrapper(var vector: DenseVector[Double]) extends Value {
 
     vector = new DenseVector[Double](data)
   }
+
+
+  override def toString() = {
+    vector.toString()
+  }
 }
 
 object VectorWrapper{

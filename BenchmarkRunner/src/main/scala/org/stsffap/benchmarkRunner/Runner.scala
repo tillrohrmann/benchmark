@@ -6,6 +6,7 @@ import eu.stratosphere.api.common.PlanExecutor
 import eu.stratosphere.client.RemoteExecutor
 import org.apache.spark.SparkConf
 import org.ini4j.Ini
+import org.stsffap.benchmarks.gnmf.{GNMFStratosphere, GNMFSpark}
 import org.stsffap.benchmarks.pageRank.{PageRankSpark, PageRankStratosphere}
 import org.stsffap.benchmarks.{Benchmark, RuntimeConfiguration, Benchmarks}
 
@@ -97,7 +98,7 @@ object Runner {
 
         benchmark match {
           case Benchmarks.PageRank => new PageRankStratosphere(executor, parallelism)
-          case Benchmarks.NMF => null
+          case Benchmarks.NMF => new GNMFStratosphere(executor, parallelism)
           case Benchmarks.KMeans => null
         }
 
@@ -120,17 +121,22 @@ object Runner {
         benchmark match {
           case Benchmarks.PageRank => new PageRankSpark(conf)
           case Benchmarks.KMeans => null
-          case Benchmarks.NMF => null
+          case Benchmarks.NMF => new GNMFSpark(conf)
         }
     }
   }
 
   def getSparkDependencies: List[String] = {
-    List("benchmarks-1.0-SNAPSHOT.jar") map { x => libraryPath + x }
+    List("benchmarks-1.0-SNAPSHOT.jar") map {
+    x =>
+      libraryPath + x }
   }
 
   def getStratosphereDependencies: List[String] = {
-    List("benchmarks-1.0-SNAPSHOT.jar", "breeze_2.10-0.8.1.jar", "commons-math3-3.2.jar") map { x => libraryPath + x}
+    List("benchmarks-1.0-SNAPSHOT.jar","breeze-core_2.10-0.4.jar", "breeze-math_2.10-0.4.jar",
+      "commons-math3-3.2.jar") map {
+      x => libraryPath + x
+    }
   }
 
   def printResults() {
@@ -201,7 +207,7 @@ object Runner {
     val generalSection = ini.get("general")
     benchmark = generalSection.get("benchmark", DEFAULT_BENCHMARK) match {
       case "PageRank" => Benchmarks.PageRank
-      case "NMF" => Benchmarks.NMF
+      case "GNMF" => Benchmarks.NMF
       case "KMeans" => Benchmarks.KMeans
     }
     engine = generalSection.get("engine", DEFAULT_ENGINE) match {

@@ -10,11 +10,12 @@ import org.stsffap.benchmarks.{RuntimeConfiguration, StratosphereBenchmark}
 class GNMFStratosphere(@transient val executor: PlanExecutor, val parallelism: Int) extends StratosphereBenchmark with
 GNMFBenchmark with Serializable {
   var gnmf: GNMFConfiguration = null
+  @transient var V: DataSet[Entry]= null
 
   def getScalaPlan(runtimeConfiguration: RuntimeConfiguration, gnmfConfig: GNMFConfiguration): ScalaPlan = {
     gnmf = gnmfConfig
 
-    val V = getV
+    V = getV
     val initialW = getW
     val initialH = getH
 
@@ -82,8 +83,8 @@ GNMFBenchmark with Serializable {
 
     val resultingWH = initialWH.iterate(gnmf.maxIterations, stepWH)
 
-    val resultingW = resultingWH.filter(x => x._1 == 0).map{ x => x._2 }
-    val resultingH = resultingWH.filter(x => x._1 == 1).map{ x => x._2 }
+    val resultingW = resultingWH.filter(x => x._1 == 0).map{ x => (x._2._1, x._2._2.vector.activeSize) }
+    val resultingH = resultingWH.filter(x => x._1 == 1).map{ x => (x._2._1, x._2._2.vector.activeSize) }
 
     val outputW = runtimeConfiguration.outputPath.endsWith("/") match {
       case true => runtimeConfiguration.outputPath + "W"
@@ -94,8 +95,8 @@ GNMFBenchmark with Serializable {
       case true => runtimeConfiguration.outputPath + "H"
       case false => runtimeConfiguration.outputPath + "/H"
     }
-    val sinkW = resultingW.write(outputW, CsvOutputFormat[(Int, VectorWrapper)]())
-    val sinkH = resultingH.write(outputH, CsvOutputFormat[(Int, VectorWrapper)]())
+    val sinkW = resultingW.write(outputW, CsvOutputFormat[(Int, Int)]())
+    val sinkH = resultingH.write(outputH, CsvOutputFormat[(Int, Int)]())
 
     new ScalaPlan(Seq(sinkW, sinkH))
   }
@@ -105,9 +106,14 @@ GNMFBenchmark with Serializable {
 
     val coords = for(row <- 0 until gnmf.rowsV; col <- 0 until gnmf.colsV) yield (row, col)
     val entries = coords zip gaussian.sample(gnmf.rowsV*gnmf.colsV) filter { x => x._2 < gnmf.sparsity } map { case
-      (coord, _) => Entry(coord._1, coord._2, gaussian.draw())}
+      (coord, _) => (coord._1*gnmf.colsV+ coord._2)}
 
-    CollectionDataSource(entries).groupBy( x => (x.row, x.col)).reduceGroup(xs => xs.next)
+    CollectionDataSource(entries).groupBy( x => x).reduceGroup(xs => xs.next).map{
+      x =>
+        val row = x /gnmf.colsV
+        val col = x %gnmf.colsV
+        Entry(row, col, new Gaussian(0, 1).draw())
+    }
   }
 
   def getW = {

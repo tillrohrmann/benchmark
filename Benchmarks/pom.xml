@@ -26,7 +26,7 @@
         </dependency>
         <dependency>
             <groupId>org.scalanlp</groupId>
-            <artifactId>breeze_2.10</artifactId>
+            <artifactId>breeze-math_2.10</artifactId>
         </dependency>
     </dependencies>
 
