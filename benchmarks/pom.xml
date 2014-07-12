@@ -32,7 +32,6 @@
             <groupId>org.scalanlp</groupId>
             <artifactId>breeze-natives_2.10</artifactId>
         </dependency>
-
     </dependencies>
 
     <build>

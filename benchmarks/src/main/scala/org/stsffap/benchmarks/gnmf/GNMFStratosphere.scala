@@ -20,11 +20,23 @@ GNMFBenchmark with Serializable {
     val initialW = getW
     val initialH = getH
 
-    val initialWH = (initialW map { x => (0, x) }) union (initialH map { x=> (1, x)})
+    val initialWH = (initialW map {
+      x =>
+        (0, x)
+    }) union (initialH map {
+      x=>
+        (1, x)
+    })
 
     val stepWH = (WH: DataSet[(Int, (Int, VectorWrapper))]) => {
-      val W = WH filter { x => x._1 == 0} map { x => x._2 }
-      val H = WH filter { x => x._1 == 1} map { x => x._2 }
+      val W = WH filter { x => x._1 == 0} map {
+        x =>
+          x._2
+      }
+      val H = WH filter { x => x._1 == 1} map {
+        x =>
+          x._2
+      }
 
       //X = W' * V
       val partialX = V join W where {x => x.row} isEqualTo { x => x._1 } map { case (entry, (_, vec)) =>
@@ -53,7 +65,7 @@ GNMFBenchmark with Serializable {
 
       // T = V*H'
       val partialT = V join nH where { x=> x.col } isEqualTo {x => x._1 } map { case (entry, (_, vw)) =>
-        (entry.col, VectorWrapper(vw.vector * entry.value))
+        (entry.row, VectorWrapper(vw.vector * entry.value))
       }
       val T = partialT.groupBy{x => x._1}.combinableReduceGroup{ ts =>
         ts.reduce{ (a,b) => (a._1, VectorWrapper(a._2.vector + b._2.vector))}
@@ -78,7 +90,12 @@ GNMFBenchmark with Serializable {
         (idx, VectorWrapper(ww.vector :* tuw.vector))
       }
 
-      val unionWH = (nW map { x => (0,x)}) union (nH map { x=> (1,x)})
+      val unionWH = (nW map {
+        x =>
+          (0,x)
+      }) union (nH map {
+        x=>
+          (1,x)})
       unionWH map { x => x }
     }
 

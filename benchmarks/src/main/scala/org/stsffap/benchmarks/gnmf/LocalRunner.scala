@@ -9,16 +9,15 @@ object LocalRunner {
     val data = List("sparsity" -> ".9","rowsV" -> "10", "colsV" -> "5", "k" -> "2", "maxIterations" -> "2").toMap
     val runtimeConfig = RuntimeConfiguration(outputPath = "/tmp/benchmark/gnmf")
 
-//    val executor = new LocalExecutor()
-//    executor.setDefaultOverwriteFiles(true)
-//    val gnmf = new GNMFStratosphere(executor, 1)
-//    gnmf.run(runtimeConfig, data)
+    val executor = new LocalExecutor()
+    executor.setDefaultOverwriteFiles(true)
+    val benchmark = new GNMFStratosphere(executor, 1)
 
-    val conf = new SparkConf().
-    setMaster("local[2]").
-    setAppName("Local test")
-
-    val benchmark = new GNMFSpark(conf)
+//    val conf = new SparkConf().
+//    setMaster("local[2]").
+//    setAppName("Local test")
+//
+//    val benchmark = new GNMFSpark(conf)
 
     benchmark.run(runtimeConfig, data)
   }
