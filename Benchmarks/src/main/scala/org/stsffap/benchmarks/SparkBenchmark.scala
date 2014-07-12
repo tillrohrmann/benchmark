@@ -15,10 +15,11 @@ trait SparkBenchmark extends Benchmark {
     val sparkTimer = new SparkTimer(pattern)
     sparkLogger.addAppender(new WriterAppender(new SimpleLayout(), sparkTimer))
 
-    sc = new SparkContext(sparkConfig)
+    init(runtimeConfig)
+
     runSparkBenchmark(runtimeConfig, data)
-    sc.stop()
-    sc = null
+
+    stop()
 
     sparkTimer.totalTime
   }
@@ -26,6 +27,16 @@ trait SparkBenchmark extends Benchmark {
   def stop(){
     if(sc != null){
       sc.stop()
+      sc = null
+    }
+  }
+
+  def init(runtimeConfig: RuntimeConfiguration){
+    sc = new SparkContext(sparkConfig)
+
+    runtimeConfig.checkpointDir match {
+      case Some(s) => sc.setCheckpointDir(s)
+      case _ =>
     }
   }
 }

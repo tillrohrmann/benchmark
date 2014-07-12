@@ -11,7 +11,7 @@ class PageRankSpark(val sparkConfig: SparkConf) extends SparkBenchmark with Page
 
   def executePageRank(runtimeConfiguration: RuntimeConfiguration, configuration: PageRankConfiguration){
     if(sc == null){
-      sc = new SparkContext(sparkConfig)
+      init(runtimeConfiguration)
     }
 
     val initialPageRankVector = generatePageRankVector(configuration)
@@ -31,6 +31,11 @@ class PageRankSpark(val sparkConfig: SparkConf) extends SparkBenchmark with Page
       }
 
       resultingPageRankVector = votes.reduceByKey(_ + _)
+
+      if(runtimeConfiguration.iterationsUntilCheckpoint > 0 && i % runtimeConfiguration.iterationsUntilCheckpoint ==
+        (runtimeConfiguration.iterationsUntilCheckpoint-1)){
+        resultingPageRankVector.checkpoint()
+      }
     }
 
     resultingPageRankVector foreach {

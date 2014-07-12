@@ -1,13 +1,13 @@
 package org.stsffap.benchmarks.pageRank
 
 import breeze.stats.distributions.Rand
-import eu.stratosphere.api.common.PlanExecutor
+import eu.stratosphere.api.common.{Plan, PlanExecutor}
 import eu.stratosphere.api.scala.operators.CsvOutputFormat
 import eu.stratosphere.api.scala.{CollectionDataSource, DataSet, ScalaPlan}
-import org.stsffap.benchmarks.{RuntimeConfiguration, Benchmark}
+import org.stsffap.benchmarks.{StratosphereBenchmark, RuntimeConfiguration}
 
-class PageRankStratosphere(@transient executor: PlanExecutor, parallelism: Int) extends Benchmark with PageRankBenchmark
-with Serializable {
+class PageRankStratosphere(@transient val executor: PlanExecutor,val parallelism: Int) extends StratosphereBenchmark
+with PageRankBenchmark with Serializable {
   var configuration: PageRankConfiguration = null
 
   def getScalaPlan(runtimeConfiguration: RuntimeConfiguration, config: PageRankConfiguration): ScalaPlan = {
@@ -53,22 +53,11 @@ with Serializable {
     }
   }
 
-  def execute(runtimeConfiguration: RuntimeConfiguration, pageRankConfiguration: PageRankConfiguration): Double = {
-    val plan = getScalaPlan(runtimeConfiguration, pageRankConfiguration)
-
-    plan.setDefaultParallelism(parallelism)
-    plan.setJobName("PageRankStratosphere")
-
-    executor.executePlan(plan).getNetRuntime/1000.0
-  }
-
-  def run(runtimeConfiguration: RuntimeConfiguration, inputData: Map[String, String]): Double = {
-    execute(runtimeConfiguration, getPageRankConfiguration(inputData))
+  def getPlan(runtimeConfiguration: RuntimeConfiguration, data: Map[String, String]): Plan = {
+    getScalaPlan(runtimeConfiguration, getPageRankConfiguration(data))
   }
 
   def getInformation:String = {
     "# PageRank Benchmark Stratosphere"
   }
-
-  def stop(){}
 }

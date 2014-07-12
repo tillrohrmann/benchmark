@@ -21,6 +21,7 @@ object Runner {
   val DEFAULT_OUTPUT_FILE = "benchmarkResult"
   val DEFAULT_SPARK_PORT = 7077
   val DEFAULT_STRATOSPHERE_PORT = 6123
+  val DEFAULT_ITERATIONS_UNTIL_CHECKPOINT = "0"
 
   var benchmark: Benchmarks.Value = null
   var engine:Engines.Value = null
@@ -34,6 +35,8 @@ object Runner {
   val data = collection.mutable.HashMap[String, List[String]]()
   var memory:Option[String] = None
   var libraryPath: String = null
+  var iterationsUntilCheckpoint = 0
+  var checkpointDir: Option[String] = None
 
   var datapoints: ListBuffer[DatapointEntry] = ListBuffer()
 
@@ -61,7 +64,7 @@ object Runner {
       val p = getParallelism(idx)
 
       val benchmark = instantiateBenchmark(p)
-      val runtimeConfig = RuntimeConfiguration(outputPath)
+      val runtimeConfig = RuntimeConfiguration(outputPath, checkpointDir, iterationsUntilCheckpoint)
 
       val measurements = for(_ <- 0 until tries) yield {
         benchmark.run(runtimeConfig, inputData)
@@ -223,6 +226,13 @@ object Runner {
 
     this.libraryPath = generalSection.get("libraryPath", new File(this.getClass().getProtectionDomain().getCodeSource
       ().getLocation().getFile()).getParent()+"/lib/")
+
+    iterationsUntilCheckpoint = generalSection.get("iterationsUntilCheckpoint", DEFAULT_ITERATIONS_UNTIL_CHECKPOINT).toInt
+
+    checkpointDir = generalSection.get("checkpointDir") match {
+      case null => None
+      case s => Some(s)
+    }
   }
 
   def printUsage() {
