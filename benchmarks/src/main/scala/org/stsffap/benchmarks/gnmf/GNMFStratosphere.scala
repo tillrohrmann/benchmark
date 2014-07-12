@@ -7,6 +7,7 @@ import eu.stratosphere.api.scala.operators.CsvOutputFormat
 import eu.stratosphere.api.scala.{DataSet, CollectionDataSource, ScalaPlan}
 import org.stsffap.benchmarks.{RuntimeConfiguration, StratosphereBenchmark}
 
+@SerialVersionUID(1L)
 class GNMFStratosphere(@transient val executor: PlanExecutor, val parallelism: Int) extends StratosphereBenchmark with
 GNMFBenchmark with Serializable {
   var gnmf: GNMFConfiguration = null

@@ -15,6 +15,7 @@
 
     <properties>
         <stratosphere.version>0.6-patched</stratosphere.version>
+        <scala.version>2.10.3</scala.version>
     </properties>
 
     <dependencyManagement>
@@ -26,8 +27,24 @@
             </dependency>
             <dependency>
                 <groupId>org.scalanlp</groupId>
-                <artifactId>breeze-math_2.10</artifactId>
-                <version>0.4</version>
+                <artifactId>breeze_2.10</artifactId>
+                <version>0.8.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.scalanlp</groupId>
+                <artifactId>breeze-natives_2.10</artifactId>
+                <version>0.8.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-library</artifactId>
+                <version>${scala.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-compiler</artifactId>
+                <version>${scala.version}</version>
             </dependency>
             <dependency>
                 <groupId>eu.stratosphere</groupId>

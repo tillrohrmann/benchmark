@@ -133,7 +133,14 @@ object Runner {
   }
 
   def getStratosphereDependencies: List[String] = {
-    List("benchmarks-1.0-SNAPSHOT.jar","breeze-core_2.10-0.4.jar", "breeze-math_2.10-0.4.jar",
+    List("benchmarks-1.0-SNAPSHOT.jar",
+      "breeze_2.10-0.8.1.jar",
+      "breeze-natives_2.10-0.8.1.jar",
+      "netlib-native_ref-linux-x86_64-1.1-natives.jar",
+      "core-1.1.2.jar",
+      "netlib-native_system-linux-x86_64-1.1-natives.jar",
+      "jniloader-1.1.jar",
+      "native_ref-java-1.1.jar",
       "commons-math3-3.2.jar") map {
       x => libraryPath + x
     }

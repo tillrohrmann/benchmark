@@ -6,6 +6,7 @@ import eu.stratosphere.api.scala.operators.CsvOutputFormat
 import eu.stratosphere.api.scala.{CollectionDataSource, DataSet, ScalaPlan}
 import org.stsffap.benchmarks.{StratosphereBenchmark, RuntimeConfiguration}
 
+@SerialVersionUID(1L)
 class PageRankStratosphere(@transient val executor: PlanExecutor,val parallelism: Int) extends StratosphereBenchmark
 with PageRankBenchmark with Serializable {
   var configuration: PageRankConfiguration = null
