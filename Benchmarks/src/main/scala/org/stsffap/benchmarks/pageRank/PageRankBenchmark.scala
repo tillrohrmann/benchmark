@@ -1,4 +1,4 @@
-package org.stsffap.benchmark
+package org.stsffap.benchmarks.pageRank
 
 trait PageRankBenchmark {
   def getPageRankConfiguration(inputData: Map[String, String]): PageRankConfiguration = {

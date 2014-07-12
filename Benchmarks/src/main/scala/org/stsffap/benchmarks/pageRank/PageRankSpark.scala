@@ -1,14 +1,19 @@
-package org.stsffap.benchmark
+package org.stsffap.benchmarks.pageRank
 
 import breeze.stats.distributions.Rand
-import org.apache.spark.SparkContext
-import org.apache.spark.rdd.RDD
 import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
+import org.apache.spark.{SparkConf, SparkContext}
+import org.stsffap.benchmarks.{SparkBenchmark, RuntimeConfiguration}
 
 
-class PageRankSpark(sc: SparkContext) extends SparkBenchmark with PageRankBenchmark {
+class PageRankSpark(val sparkConfig: SparkConf) extends SparkBenchmark with PageRankBenchmark {
 
-  def executePageRank(configuration: PageRankConfiguration){
+  def executePageRank(runtimeConfiguration: RuntimeConfiguration, configuration: PageRankConfiguration){
+    if(sc == null){
+      sc = new SparkContext(sparkConfig)
+    }
+
     val initialPageRankVector = generatePageRankVector(configuration)
     val adjacencyMatrix = generateAdjacencyMatrix(configuration)
 
@@ -28,7 +33,10 @@ class PageRankSpark(sc: SparkContext) extends SparkBenchmark with PageRankBenchm
       resultingPageRankVector = votes.reduceByKey(_ + _)
     }
 
-    resultingPageRankVector foreach println
+    resultingPageRankVector foreach {
+      p =>
+        println(p)
+    }
   }
 
   def generatePageRankVector(configuration: PageRankConfiguration) = {
@@ -50,8 +58,11 @@ class PageRankSpark(sc: SparkContext) extends SparkBenchmark with PageRankBenchm
   }
 
 
-  def runSparkBenchmark(inputData: Map[String, String]) {
-    executePageRank(getPageRankConfiguration(inputData))
-    sc.stop()
+  def runSparkBenchmark(runtimeConfig: RuntimeConfiguration, inputData: Map[String, String]) {
+    executePageRank(runtimeConfig: RuntimeConfiguration, getPageRankConfiguration(inputData))
+  }
+
+  def getInformation:String = {
+    "# PageRank Benchmark: Spark"
   }
 }

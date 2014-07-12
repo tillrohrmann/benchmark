@@ -1,13 +1,15 @@
-package org.stsffap.benchmark
+package org.stsffap.benchmarkRunner
 
-import java.io.{PrintStream, File}
+import java.io.{File, PrintStream}
 
 import eu.stratosphere.api.common.PlanExecutor
 import eu.stratosphere.client.RemoteExecutor
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.SparkConf
 import org.ini4j.Ini
-import collection.JavaConversions._
+import org.stsffap.benchmarks.pageRank.{PageRankSpark, PageRankStratosphere}
+import org.stsffap.benchmarks.{Benchmark, RuntimeConfiguration, Benchmarks}
 
+import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
 
 object Runner {
@@ -30,6 +32,8 @@ object Runner {
   var tries: Int = 0;
   var port:Option[Int] = None
   val data = collection.mutable.HashMap[String, List[String]]()
+  var memory:Option[String] = None
+  var libraryPath: String = null
 
   var datapoints: ListBuffer[DatapointEntry] = ListBuffer()
 
@@ -57,17 +61,20 @@ object Runner {
       val p = getParallelism(idx)
 
       val benchmark = instantiateBenchmark(p)
+      val runtimeConfig = RuntimeConfiguration(outputPath)
 
       val measurements = for(_ <- 0 until tries) yield {
-        benchmark.run(inputData)
+        benchmark.run(runtimeConfig, inputData)
       }
+
+      benchmark.stop()
 
       val cleanedMeasurements = measurements.filter{_ >= 0}
       val num = cleanedMeasurements.length
       val average = cleanedMeasurements.fold(0.0)(_+_)/num
       val stdEstimate = if(num > 1){
         math.sqrt(1.0/(num-1)* cleanedMeasurements.
-          foldLeft(0.0){ (s, e) => s + math.pow((e -average),2)})
+          foldLeft(0.0){ (s, e) => s + math.pow((e - average),2)})
       } else {
         0
       }
@@ -83,12 +90,12 @@ object Runner {
         val executor: PlanExecutor = new RemoteExecutor(master, port match {
           case Some(p) => p
           case None => DEFAULT_STRATOSPHERE_PORT
-        })
+        }, getStratosphereDependencies)
 
         benchmark match {
           case Benchmarks.PageRank => new PageRankStratosphere(executor, parallelism)
           case Benchmarks.NMF => null
-          case Benchmarks.KMEANS => null
+          case Benchmarks.KMeans => null
         }
 
       case Engines.Spark =>
@@ -102,16 +109,25 @@ object Runner {
         setMaster(masterURL).
         set("spark.cores.max", parallelism.toString).
         set("spark.default.parallelism", parallelism.toString).
-        set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+        set("spark.serializer", "org.apache.spark.serializer.KryoSerializer").
+        setJars(getSparkDependencies)
 
-        val sc: SparkContext = new SparkContext(conf)
+        memory foreach { m => conf.set("spark.executor.memory", m)}
 
         benchmark match {
-          case Benchmarks.PageRank => new PageRankSpark(sc)
-          case Benchmarks.KMEANS => null
+          case Benchmarks.PageRank => new PageRankSpark(conf)
+          case Benchmarks.KMeans => null
           case Benchmarks.NMF => null
         }
     }
+  }
+
+  def getSparkDependencies: List[String] = {
+    List("benchmarks-1.0-SNAPSHOT.jar") map { x => libraryPath + x }
+  }
+
+  def getStratosphereDependencies: List[String] = {
+    List("benchmarks-1.0-SNAPSHOT.jar", "breeze_2.10-0.8.1.jar", "commons-math3-3.2.jar") map { x => libraryPath + x}
   }
 
   def printResults() {
@@ -183,7 +199,7 @@ object Runner {
     benchmark = generalSection.get("benchmark", DEFAULT_BENCHMARK) match {
       case "PageRank" => Benchmarks.PageRank
       case "NMF" => Benchmarks.NMF
-      case "KMeans" => Benchmarks.KMEANS
+      case "KMeans" => Benchmarks.KMeans
     }
     engine = generalSection.get("engine", DEFAULT_ENGINE) match {
       case "Stratosphere" => Engines.Stratosphere
@@ -192,12 +208,21 @@ object Runner {
     master = generalSection.get("master", DEFAULT_MASTER)
     appName = generalSection.get("appName", DEFAULT_APPNAME)
     outputPath = generalSection.get("outputPath", DEFAULT_OUTPUT_PATH)
+    outputFile = generalSection.get("outputFile", DEFAULT_OUTPUT_FILE)
     parallelism = generalSection.get("parallelism", "1").split(",").map(x => x.trim().toInt).toList
     tries = generalSection.get("tries", "1").toInt
     port = generalSection.get("port") match {
       case null => None
       case x => Some(x.toInt)
     }
+
+    memory = generalSection.get("memory") match {
+      case null => None
+      case x => Some(x)
+    }
+
+    this.libraryPath = generalSection.get("libraryPath", new File(this.getClass().getProtectionDomain().getCodeSource
+      ().getLocation().getFile()).getParent()+"/lib/")
   }
 
   def printUsage() {

@@ -1,15 +1,16 @@
-package org.stsffap.benchmark
+package org.stsffap.benchmarks.pageRank
 
 import breeze.stats.distributions.Rand
 import eu.stratosphere.api.common.PlanExecutor
 import eu.stratosphere.api.scala.operators.CsvOutputFormat
-import eu.stratosphere.api.scala.{DataSet, CollectionDataSource, ScalaPlan}
+import eu.stratosphere.api.scala.{CollectionDataSource, DataSet, ScalaPlan}
+import org.stsffap.benchmarks.{RuntimeConfiguration, Benchmark}
 
 class PageRankStratosphere(@transient executor: PlanExecutor, parallelism: Int) extends Benchmark with PageRankBenchmark
 with Serializable {
   var configuration: PageRankConfiguration = null
 
-  def getScalaPlan(config: PageRankConfiguration): ScalaPlan = {
+  def getScalaPlan(runtimeConfiguration: RuntimeConfiguration, config: PageRankConfiguration): ScalaPlan = {
     configuration = config
     val initialPageRankVector = getPageRankVector(configuration)
     val adjacencyMatrix = getAdjacencyMatrix(configuration)
@@ -28,7 +29,7 @@ with Serializable {
 
     val resultingPageRankVector = initialPageRankVector.iterate(configuration.maxIterations, stepFunction)
 
-    val sink = resultingPageRankVector.write(configuration.outputPath, CsvOutputFormat[(Int, Double)]())
+    val sink = resultingPageRankVector.write(runtimeConfiguration.outputPath, CsvOutputFormat[(Int, Double)]())
 
     new ScalaPlan(Seq(sink))
   }
@@ -52,16 +53,22 @@ with Serializable {
     }
   }
 
-  def execute(configuration: PageRankConfiguration): Double = {
-    val plan = getScalaPlan(configuration)
+  def execute(runtimeConfiguration: RuntimeConfiguration, pageRankConfiguration: PageRankConfiguration): Double = {
+    val plan = getScalaPlan(runtimeConfiguration, pageRankConfiguration)
 
     plan.setDefaultParallelism(parallelism)
     plan.setJobName("PageRankStratosphere")
 
-    executor.executePlan(plan).getNetRuntime
+    executor.executePlan(plan).getNetRuntime/1000.0
   }
 
-  def run(inputData: Map[String, String]): Double = {
-    execute(getPageRankConfiguration(inputData))
+  def run(runtimeConfiguration: RuntimeConfiguration, inputData: Map[String, String]): Double = {
+    execute(runtimeConfiguration, getPageRankConfiguration(inputData))
   }
+
+  def getInformation:String = {
+    "# PageRank Benchmark Stratosphere"
+  }
+
+  def stop(){}
 }

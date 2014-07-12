@@ -1,7 +1,7 @@
-package org.stsffap.benchmark
+package org.stsffap.benchmarks
 
 object Benchmarks extends Enumeration {
   val PageRank = Value("PageRank")
   val NMF = Value("NMF")
-  val KMEANS = Value("KMeans")
+  val KMeans = Value("KMeans")
 }

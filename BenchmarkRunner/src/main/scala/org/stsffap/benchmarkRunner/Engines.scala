@@ -1,4 +1,4 @@
-package org.stsffap.benchmark
+package org.stsffap.benchmarkRunner
 
 object Engines extends Enumeration {
   val Stratosphere = Value("Stratosphere")

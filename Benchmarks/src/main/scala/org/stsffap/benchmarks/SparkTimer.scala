@@ -1,4 +1,4 @@
-package org.stsffap.benchmark
+package org.stsffap.benchmarks
 
 import java.io.OutputStream
 

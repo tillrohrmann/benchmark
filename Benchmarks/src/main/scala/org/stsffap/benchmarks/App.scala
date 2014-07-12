@@ -1,7 +1,8 @@
-package org.stsffap.benchmark
+package org.stsffap.benchmarks
 
 import eu.stratosphere.client.LocalExecutor
-import org.apache.spark.{SparkContext, SparkConf}
+import org.apache.spark.SparkConf
+import org.stsffap.benchmarks.pageRank.{PageRankStratosphere, PageRankSpark, PageRankConfiguration}
 
 object App {
 
@@ -15,23 +16,20 @@ object App {
       set("spark.default.parallelism", dop.toString).
       set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 
-    val sc = new SparkContext(sparkConf)
+    val pageRank = new PageRankSpark(sparkConf)
 
-    val pageRank = new PageRankSpark(sc)
-
-    val configuration = PageRankConfiguration(numRows = 10, sparsity = 0.1, maxIterations = 100,
-      outputPath = "file:///tmp/benchmark/")
-
+    val configuration = PageRankConfiguration(numRows = 10, sparsity = 0.1, maxIterations = 100)
+    val runtimeConfiguration = RuntimeConfiguration(outputPath = "file:///tmp/benchmark/")
 //    pageRank.executePageRank(configuration)
-
-    sc.stop()
 
     val executor = new LocalExecutor
     executor.setDefaultOverwriteFiles(true)
 
     val pageRankStratosphere = new PageRankStratosphere(executor, dop)
 
-    pageRankStratosphere.execute(configuration)
+    pageRankStratosphere.execute(runtimeConfiguration, configuration)
+
+
   }
 
 }
