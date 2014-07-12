@@ -55,12 +55,12 @@ class GNMFSpark(val sparkConfig: SparkConf) extends SparkBenchmark with GNMFBenc
   }
 
   def getV(gnmf: GNMFConfiguration) = {
-    val coords = for(row <- 0 until gnmf.rowsV; col <- 0 until gnmf.colsV) yield (row, col)
-    val gaussian = new Gaussian(0, 1)
-    val entries = coords zip Rand.uniform.sample(gnmf.rowsV*gnmf.colsV) filter { x => x._2 < gnmf.sparsity } map { x
-    => Entry(x._1._1, x._1._2, gaussian.draw())}
-
-    sc.parallelize(entries)
+    val rows = 0 until gnmf.rowsV
+    sc.parallelize(rows) flatMap { row =>
+      val gaussian = new Gaussian(0,1)
+      Rand.uniform.sample(gnmf.colsV).zipWithIndex.filter{x => x._1 < gnmf.sparsity}.map{x => Entry(row, x._2,
+        gaussian.draw())}
+    }
   }
 
   def getW(gnmf: GNMFConfiguration) = {

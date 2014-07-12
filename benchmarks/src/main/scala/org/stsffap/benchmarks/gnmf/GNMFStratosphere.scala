@@ -1,7 +1,7 @@
 package org.stsffap.benchmarks.gnmf
 
 import breeze.linalg.DenseVector
-import breeze.stats.distributions.Gaussian
+import breeze.stats.distributions.{Rand, Gaussian}
 import eu.stratosphere.api.common.{Plan, PlanExecutor}
 import eu.stratosphere.api.scala.operators.CsvOutputFormat
 import eu.stratosphere.api.scala.{DataSet, CollectionDataSource, ScalaPlan}
@@ -120,18 +120,14 @@ GNMFBenchmark with Serializable {
   }
 
   def getV = {
-    val gaussian = new Gaussian(0,1)
-
-    val coords = for(row <- 0 until gnmf.rowsV; col <- 0 until gnmf.colsV) yield (row, col)
-    val entries = coords zip gaussian.sample(gnmf.rowsV*gnmf.colsV) filter { x => x._2 < gnmf.sparsity } map { case
-      (coord, _) => (coord._1*gnmf.colsV+ coord._2)}
-
-    CollectionDataSource(entries).groupBy( x => x).reduceGroup(xs => xs.next).map{
-      x =>
-        val row = x /gnmf.colsV
-        val col = x %gnmf.colsV
-        Entry(row, col, new Gaussian(0, 1).draw())
+    val rows = 0 until gnmf.rowsV
+    CollectionDataSource(rows).groupBy(x=>x).reduceGroup(xs => xs.next).flatMap{ row =>
+      val gaussian = new Gaussian(0,1)
+      Rand.uniform.sample(gnmf.colsV).zipWithIndex.filter(x => x._1 < gnmf.sparsity).map{ x =>
+        Entry(row, x._2, gaussian.draw())
+      }.toIterator
     }
+
   }
 
   def getW = {
