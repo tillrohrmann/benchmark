@@ -1,6 +1,6 @@
 package org.stsffap.benchmarks.kmeans
 
-import breeze.stats.distributions.Rand
+import breeze.stats.distributions.{Rand}
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext._
 import org.stsffap.benchmarks.{RuntimeConfiguration, SparkBenchmark}
@@ -25,6 +25,11 @@ class KMeansSpark(val sparkConfig: SparkConf) extends SparkBenchmark with KMeans
         (pointA+pointB, numA + numB)
       } map {
         case (id, (point, num)) => (id, point / num)
+      }
+
+      if(runtimeConfig.iterationsUntilCheckpoint >0 && i % runtimeConfig.iterationsUntilCheckpoint == (runtimeConfig
+        .iterationsUntilCheckpoint-1)){
+        centroids.checkpoint()
       }
     }
 

@@ -1,6 +1,6 @@
 package org.stsffap.benchmarks.kmeans
 
-import breeze.stats.distributions.Rand
+import breeze.stats.distributions.{Rand}
 import eu.stratosphere.api.common.{Plan, PlanExecutor}
 import eu.stratosphere.api.scala.operators.CsvOutputFormat
 import eu.stratosphere.api.scala.{CollectionDataSource, ScalaPlan}
@@ -18,7 +18,7 @@ with KMeansBenchmark with Serializable{
     val initialCentroids = getCentroids(kmeans)
 
     val resultingCentroids = initialCentroids.iterate(kmeans.maxIterations, (centroids) => {
-      val distances = datapoints cross initialCentroids map { case ((dataId, datapoint), (centroidId, centroid)) =>
+      val distances = datapoints cross centroids map { case ((dataId, datapoint), (centroidId, centroid)) =>
         (dataId, centroidId, datapoint, centroid.distance(datapoint))
       }
 
@@ -26,13 +26,14 @@ with KMeansBenchmark with Serializable{
         (_, centroidId, datapoint,_) => (centroidId, datapoint, 1)}
 
       assignment.groupBy(x => x._1).combinableReduceGroup { ps =>
-        ps.reduce{(a,b) => (a._1, a._2 + a._2, a._3 + a._3)}
+        ps.reduce{(a,b) => (a._1, a._2 + b._2, a._3 +b._3)}
       }.map{
         case (id, data, num) => (id, data/num)
       }
     })
 
-    val sink = resultingCentroids.write(runtimeConfig.outputPath, CsvOutputFormat[(Int, Datapoint)]())
+    val sink = resultingCentroids.write(runtimeConfig.outputPath+"/result",
+      CsvOutputFormat[(Int,Datapoint)]())
 
     new ScalaPlan(Seq(sink))
   }

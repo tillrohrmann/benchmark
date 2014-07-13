@@ -7,6 +7,7 @@ import eu.stratosphere.client.RemoteExecutor
 import org.apache.spark.SparkConf
 import org.ini4j.Ini
 import org.stsffap.benchmarks.gnmf.{GNMFStratosphere, GNMFSpark}
+import org.stsffap.benchmarks.kmeans.{KMeansSpark, KMeansStratosphere}
 import org.stsffap.benchmarks.pageRank.{PageRankSpark, PageRankStratosphere}
 import org.stsffap.benchmarks.{Benchmark, RuntimeConfiguration, Benchmarks}
 
@@ -99,7 +100,7 @@ object Runner {
         benchmark match {
           case Benchmarks.PageRank => new PageRankStratosphere(executor, parallelism)
           case Benchmarks.NMF => new GNMFStratosphere(executor, parallelism)
-          case Benchmarks.KMeans => null
+          case Benchmarks.KMeans => new KMeansStratosphere(executor, parallelism)
         }
 
       case Engines.Spark =>
@@ -120,7 +121,7 @@ object Runner {
 
         benchmark match {
           case Benchmarks.PageRank => new PageRankSpark(conf)
-          case Benchmarks.KMeans => null
+          case Benchmarks.KMeans => new KMeansSpark(conf)
           case Benchmarks.NMF => new GNMFSpark(conf)
         }
     }
