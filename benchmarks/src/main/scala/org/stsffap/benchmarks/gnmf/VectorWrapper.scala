@@ -1,15 +1,16 @@
 package org.stsffap.benchmarks.gnmf
 
-import java.io.{DataInput, IOException, DataOutput}
+import java.io.IOException
 
 import breeze.linalg.DenseVector
-import eu.stratosphere.types.Value
+import org.apache.flink.core.memory.{DataInputView, DataOutputView}
+import org.apache.flink.types.Value
 
 class VectorWrapper(var vector: DenseVector[Double]) extends Value {
   def this() = this(null)
 
   @throws(classOf[IOException])
-  def write(out: DataOutput){
+  def write(out: DataOutputView){
     out.writeInt(vector.length)
 
     for(value <- vector.valuesIterator){
@@ -18,7 +19,7 @@ class VectorWrapper(var vector: DenseVector[Double]) extends Value {
   }
 
   @throws(classOf[IOException])
-  def read(in: DataInput){
+  def read(in: DataInputView){
     val length = in.readInt()
 
     val data = new Array[Double](length)

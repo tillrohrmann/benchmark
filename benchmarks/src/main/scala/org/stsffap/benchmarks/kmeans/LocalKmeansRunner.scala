@@ -1,6 +1,5 @@
 package org.stsffap.benchmarks.kmeans
 
-import eu.stratosphere.client.LocalExecutor
 import org.apache.spark.SparkConf
 import org.stsffap.benchmarks.RuntimeConfiguration
 

@@ -2,14 +2,13 @@ package org.stsffap.benchmarkRunner
 
 import java.io.{File, PrintStream}
 
-import eu.stratosphere.api.common.PlanExecutor
-import eu.stratosphere.client.RemoteExecutor
+import org.apache.flink.api.scala.ExecutionEnvironment
 import org.apache.spark.SparkConf
 import org.ini4j.Ini
-import org.stsffap.benchmarks.gnmf.{GNMFStratosphere, GNMFSpark}
-import org.stsffap.benchmarks.kmeans.{KMeansSpark, KMeansStratosphere}
-import org.stsffap.benchmarks.pageRank.{PageRankSpark, PageRankStratosphere}
-import org.stsffap.benchmarks.{Benchmark, RuntimeConfiguration, Benchmarks}
+import org.stsffap.benchmarks.gnmf.{GNMFFlink, GNMFSpark}
+import org.stsffap.benchmarks.kmeans.{KMeansFlink, KMeansSpark}
+import org.stsffap.benchmarks.pageRank.{PageRankFlink, PageRankSpark}
+import org.stsffap.benchmarks.{Benchmark, Benchmarks, RuntimeConfiguration}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
@@ -91,16 +90,17 @@ object Runner {
 
   def instantiateBenchmark(parallelism: Int): Benchmark = {
     engine match {
-      case Engines.Stratosphere =>
-        val executor: PlanExecutor = new RemoteExecutor(master, port match {
+      case Engines.Flink =>
+        val p = port match {
           case Some(p) => p
           case None => DEFAULT_STRATOSPHERE_PORT
-        }, getStratosphereDependencies)
+        }
+        val env = ExecutionEnvironment.createRemoteEnvironment(master, p, getStratosphereDependencies: _*)
 
         benchmark match {
-          case Benchmarks.PageRank => new PageRankStratosphere(executor, parallelism)
-          case Benchmarks.NMF => new GNMFStratosphere(executor, parallelism)
-          case Benchmarks.KMeans => new KMeansStratosphere(executor, parallelism)
+          case Benchmarks.PageRank => new PageRankFlink(env, parallelism)
+          case Benchmarks.NMF => new GNMFFlink(env, parallelism)
+          case Benchmarks.KMeans => new KMeansFlink(env, parallelism)
         }
 
       case Engines.Spark =>
@@ -135,7 +135,7 @@ object Runner {
 
   def getStratosphereDependencies: List[String] = {
     List("benchmarks-1.0-SNAPSHOT.jar",
-    "breeze_2.10-0.7.jar",
+    "breeze_2.11-0.11.2.jar",
     "commons-math3-3.2.jar",
     "core-1.1.2.jar",
     "jniloader-1.1.jar",
@@ -219,7 +219,7 @@ object Runner {
       case "KMeans" => Benchmarks.KMeans
     }
     engine = generalSection.get("engine", DEFAULT_ENGINE) match {
-      case "Stratosphere" => Engines.Stratosphere
+      case "Stratosphere" => Engines.Flink
       case "Spark" => Engines.Spark
     }
     master = generalSection.get("master", DEFAULT_MASTER)

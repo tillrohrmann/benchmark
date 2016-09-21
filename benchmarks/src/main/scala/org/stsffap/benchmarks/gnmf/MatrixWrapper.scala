@@ -1,15 +1,16 @@
 package org.stsffap.benchmarks.gnmf
 
-import java.io.{DataInput, DataOutput, IOException}
+import java.io.IOException
 
 import breeze.linalg.DenseMatrix
-import eu.stratosphere.types.Value
+import org.apache.flink.core.memory.{DataInputView, DataOutputView}
+import org.apache.flink.types.Value
 
 class MatrixWrapper(var matrix: DenseMatrix[Double]) extends Value {
   def this() = this(null)
 
   @throws(classOf[IOException])
-  def write(out: DataOutput){
+  def write(out: DataOutputView){
     out.writeInt(matrix.rows)
     out.writeInt(matrix.cols)
 
@@ -18,7 +19,7 @@ class MatrixWrapper(var matrix: DenseMatrix[Double]) extends Value {
     }
   }
 
-  def read(in: DataInput){
+  def read(in: DataInputView){
     val rows = in.readInt()
     val cols = in.readInt()
 

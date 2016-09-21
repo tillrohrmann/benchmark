@@ -1,49 +1,46 @@
 package org.stsffap.benchmarks.pageRank
 
 import breeze.stats.distributions.Rand
-import eu.stratosphere.api.common.{Plan, PlanExecutor}
-import eu.stratosphere.api.scala.operators.CsvOutputFormat
-import eu.stratosphere.api.scala.{CollectionDataSource, DataSet, ScalaPlan}
-import org.stsffap.benchmarks.{StratosphereBenchmark, RuntimeConfiguration}
+import org.apache.flink.api.scala._
+import org.stsffap.benchmarks.{FlinkBenchmark, RuntimeConfiguration}
 
 @SerialVersionUID(1L)
-class PageRankStratosphere(@transient val executor: PlanExecutor,val parallelism: Int) extends StratosphereBenchmark
+class PageRankFlink(@transient val env: ExecutionEnvironment, val parallelism: Int) extends FlinkBenchmark
 with PageRankBenchmark with Serializable {
   var configuration: PageRankConfiguration = null
 
-  def getScalaPlan(runtimeConfiguration: RuntimeConfiguration, config: PageRankConfiguration): ScalaPlan = {
+  def getScalaPlan(runtimeConfiguration: RuntimeConfiguration, config: PageRankConfiguration): Unit = {
     configuration = config
     val initialPageRankVector = getPageRankVector(configuration)
     val adjacencyMatrix = getAdjacencyMatrix(configuration)
 
     val stepFunction = (ds: DataSet[(Int, Double)]) => {
-      val spreadRank = ds join adjacencyMatrix where {x => x._1} isEqualTo {y => y._1} flatMap {
-        case ((id, rank), (_, adjList)) =>
+      val spreadRank = ds join adjacencyMatrix where {x => x._1} equalTo {y => y._1} flatMap {
+        input =>
+          val ((id, rank), (_, adjList)) = input
           val length = adjList.length
           val votes = for(target <- adjList) yield (target, 0.85*rank/length)
 
           votes.+:((id, 0.15/configuration.numRows)).toIterator
       }
 
-      spreadRank.groupBy(x => x._1).combinableReduceGroup(ps => ps.reduce((a,b) => (a._1, a._2 + b._2)))
+      spreadRank.groupBy(x => x._1).reduce((a, b) => (a._1, a._2 + b._2))
     }
 
-    val resultingPageRankVector = initialPageRankVector.iterate(configuration.maxIterations, stepFunction)
+    val resultingPageRankVector = initialPageRankVector.iterate(configuration.maxIterations)(stepFunction)
 
-    val sink = resultingPageRankVector.write(runtimeConfiguration.outputPath, CsvOutputFormat[(Int, Double)]())
-
-    new ScalaPlan(Seq(sink))
+    resultingPageRankVector.writeAsCsv(runtimeConfiguration.outputPath)
   }
 
   def getPageRankVector(configuration: PageRankConfiguration) = {
     val ids = 0 until configuration.numRows
-    val src = CollectionDataSource(ids)
+    val src = env.fromCollection(ids)
     src.groupBy{ x => x}.reduceGroup(xs => (xs.next, 1.0/configuration.numRows))
   }
 
   def getAdjacencyMatrix(configuration: PageRankConfiguration) = {
     val ids = 0 until configuration.numRows
-    val src = CollectionDataSource(ids)
+    val src = env.fromCollection(ids)
     src.groupBy(x => x).reduceGroup{xs =>
       val id = xs.next
 
@@ -54,7 +51,7 @@ with PageRankBenchmark with Serializable {
     }
   }
 
-  def getPlan(runtimeConfiguration: RuntimeConfiguration, data: Map[String, String]): Plan = {
+  def createProgram(runtimeConfiguration: RuntimeConfiguration, data: Map[String, String]): Unit = {
     getScalaPlan(runtimeConfiguration, getPageRankConfiguration(data))
   }
 

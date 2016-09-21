@@ -14,26 +14,29 @@
     </modules>
 
     <properties>
-        <stratosphere.version>0.6-patched</stratosphere.version>
-        <scala.version>2.10.3</scala.version>
+        <scala.version>2.11.7</scala.version>
+        <scala.binary.version>2.11</scala.binary.version>
+        <flink.version>1.1.2</flink.version>
+        <spark.version>2.0.0</spark.version>
+        <breeze.version>0.11.2</breeze.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>org.apache.spark</groupId>
-                <artifactId>spark-core_2.10</artifactId>
-                <version>1.0.0</version>
+                <artifactId>spark-core_${scala.binary.version}</artifactId>
+                <version>${spark.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.scalanlp</groupId>
-                <artifactId>breeze_2.10</artifactId>
-                <version>0.7</version>
+                <artifactId>breeze_${scala.binary.version}</artifactId>
+                <version>${breeze.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.scalanlp</groupId>
-                <artifactId>breeze-natives_2.10</artifactId>
-                <version>0.7</version>
+                <artifactId>breeze-natives_${scala.binary.version}</artifactId>
+                <version>${breeze.version}</version>
             </dependency>
 
             <dependency>
@@ -47,30 +50,14 @@
                 <version>${scala.version}</version>
             </dependency>
             <dependency>
-                <groupId>eu.stratosphere</groupId>
-                <artifactId>stratosphere-scala</artifactId>
-                <version>${stratosphere.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.eclipse.jetty</groupId>
-                        <artifactId>jetty-server</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.eclipse.jetty</groupId>
-                        <artifactId>jetty-servlet</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-scala_${scala.binary.version}</artifactId>
+                <version>${flink.version}</version>
             </dependency>
             <dependency>
-                <groupId>eu.stratosphere</groupId>
-                <artifactId>stratosphere-clients</artifactId>
-                <version>${stratosphere.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.eclipse.jetty</groupId>
-                        <artifactId>jetty-servlet</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-clients_${scala.binary.version}</artifactId>
+                <version>${flink.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.ini4j</groupId>
