@@ -15,13 +15,13 @@ import scala.collection.mutable.ListBuffer
 
 object Runner {
   val DEFAULT_BENCHMARK = "PageRank"
-  val DEFAULT_ENGINE = "Stratosphere"
+  val DEFAULT_ENGINE = "Flink"
   val DEFAULT_MASTER = "node1"
   val DEFAULT_APPNAME = "Benchmark"
   val DEFAULT_OUTPUT_PATH = "file:///tmp/benchmark"
   val DEFAULT_OUTPUT_FILE = "benchmarkResult"
   val DEFAULT_SPARK_PORT = 7077
-  val DEFAULT_STRATOSPHERE_PORT = 6123
+  val DEFAULT_FLINK_PORT = 6123
   val DEFAULT_ITERATIONS_UNTIL_CHECKPOINT = "0"
 
   var benchmark: Benchmarks.Value = null
@@ -93,7 +93,7 @@ object Runner {
       case Engines.Flink =>
         val p = port match {
           case Some(p) => p
-          case None => DEFAULT_STRATOSPHERE_PORT
+          case None => DEFAULT_FLINK_PORT
         }
         val env = ExecutionEnvironment.createRemoteEnvironment(master, p, getStratosphereDependencies: _*)
 
