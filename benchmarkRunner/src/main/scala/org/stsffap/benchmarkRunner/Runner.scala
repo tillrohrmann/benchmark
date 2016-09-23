@@ -95,7 +95,7 @@ object Runner {
           case Some(p) => p
           case None => DEFAULT_FLINK_PORT
         }
-        val env = ExecutionEnvironment.createRemoteEnvironment(master, p, getStratosphereDependencies: _*)
+        val env = ExecutionEnvironment.createRemoteEnvironment(master, p, getFlinkDependencies: _*)
 
         benchmark match {
           case Benchmarks.PageRank => new PageRankFlink(env, parallelism)
@@ -133,10 +133,10 @@ object Runner {
       libraryPath + x }
   }
 
-  def getStratosphereDependencies: List[String] = {
+  def getFlinkDependencies: List[String] = {
     List("benchmarks-1.0-SNAPSHOT.jar",
     "breeze_2.11-0.11.2.jar",
-    "commons-math3-3.2.jar",
+    "commons-math3-3.4.1.jar",
     "core-1.1.2.jar",
     "jniloader-1.1.jar",
     "netlib-native_system-linux-x86_64-1.1-natives.jar",
@@ -219,7 +219,7 @@ object Runner {
       case "KMeans" => Benchmarks.KMeans
     }
     engine = generalSection.get("engine", DEFAULT_ENGINE) match {
-      case "Stratosphere" => Engines.Flink
+      case "Flink" => Engines.Flink
       case "Spark" => Engines.Spark
     }
     master = generalSection.get("master", DEFAULT_MASTER)
