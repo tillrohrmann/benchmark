@@ -9,8 +9,8 @@ trait SparkBenchmark extends Benchmark {
   def runSparkBenchmark(runtimeConfig: RuntimeConfiguration, data: Map[String, String])
 
   def run(runtimeConfig: RuntimeConfiguration, data: Map[String, String]): Double = {
-    val pattern = """Job finished: [^,]*, took ([0-9\.]*) s""".r
-    val sparkLogger = Logger.getLogger("org.apache.spark.SparkContext")
+    val pattern = """Job \d+ finished: [^,]*, took ([0-9\.]*) s""".r
+    val sparkLogger = Logger.getLogger("org.apache.spark.scheduler.DAGScheduler")
     sparkLogger.setLevel(Level.INFO)
     val sparkTimer = new SparkTimer(pattern)
     sparkLogger.addAppender(new WriterAppender(new SimpleLayout(), sparkTimer))
